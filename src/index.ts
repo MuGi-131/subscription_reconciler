@@ -1,11 +1,14 @@
 import dotenv from "dotenv";
-import app from "./app";
 dotenv.config();
+
+import app from "./app";
+import { runMigrations } from "./db/migrate";
 
 const PORT = process.env.PORT || 3000;
 
 async function main() {
-  // TODO: db, worker, app load
+  // TODO: db, worker
+  await runMigrations();
   app.listen(PORT, () => {
     console.log(`Reconciler service running on port ${PORT}`);
   });
