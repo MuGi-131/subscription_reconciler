@@ -7,8 +7,9 @@ import { runMigrations } from "./db/migrate";
 const PORT = process.env.PORT || 3000;
 
 async function main() {
-  // TODO: db, worker
+  // TODO: worker
   await runMigrations();
+
   app.listen(PORT, () => {
     console.log(`Reconciler service running on port ${PORT}`);
   });
