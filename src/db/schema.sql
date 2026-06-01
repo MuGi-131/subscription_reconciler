@@ -9,3 +9,9 @@ CREATE TABLE IF NOT EXISTS entitlements (
   reason          TEXT,                            -- last event type or reason for change
   last_event_time BIGINT                           -- eventTimeMs of last applied store event (for out-of-order guard)
 );
+
+-- Processed store webhook event IDs (idempotency)
+CREATE TABLE IF NOT EXISTS processed_store_events (
+  event_id    TEXT PRIMARY KEY,
+  processed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

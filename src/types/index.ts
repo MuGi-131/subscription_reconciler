@@ -18,4 +18,18 @@ export interface DbEntitlement {
   reason: string | null;
   last_event_time: string | null; // BIGINT is usually returned as string by pg
 }
+export type StoreEventType =
+  | "INITIAL_PURCHASE"
+  | "RENEWAL"
+  | "UN_CANCELLATION"
+  | "CANCELLATION"
+  | "BILLING_ISSUE"
+  | "EXPIRATION";
 
+export interface StoreWebhookPayload {
+  eventId: string;
+  userId: string;
+  type: StoreEventType;
+  eventTimeMs: number;
+  productId: string;
+}
