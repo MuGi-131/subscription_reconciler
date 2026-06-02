@@ -23,3 +23,16 @@ CREATE TABLE IF NOT EXISTS carrier_poll_queue (
   locked_until TIMESTAMPTZ,
   last_polled  TIMESTAMPTZ
 );
+
+-- Scheduled notifications. UNIQUE constraint dedups schedule-once-only at the DB layer.
+CREATE TABLE IF NOT EXISTS notifications (
+  id            SERIAL PRIMARY KEY,
+  user_id       TEXT NOT NULL,
+  type          TEXT NOT NULL,
+  scheduled_for TIMESTAMPTZ NOT NULL,
+  sent_at       TIMESTAMPTZ,
+  UNIQUE (user_id, type, scheduled_for)
+);
+
+CREATE INDEX IF NOT EXISTS notifications_pending_idx
+  ON notifications (scheduled_for) WHERE sent_at IS NULL;
