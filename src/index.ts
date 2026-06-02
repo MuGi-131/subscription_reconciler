@@ -3,12 +3,13 @@ dotenv.config();
 
 import app from "./app";
 import { runMigrations } from "./db/migrate";
+import { startCarrierPoller } from "./workers/carrierPoller";
 
 const PORT = process.env.PORT || 3000;
 
 async function main() {
-  // TODO: worker
   await runMigrations();
+  startCarrierPoller();
 
   app.listen(PORT, () => {
     console.log(`Reconciler service running on port ${PORT}`);
