@@ -140,6 +140,18 @@ router.post("/store", async (req: Request, res: Response) => {
       [userId, newActive, newSource, eventTimestamp, type, eventTimeMs, expiresAt],
     );
 
+    // Schedule expiring-soon notification (idempotent via UNIQUE constraint)
+    if (expiresAt !== null) {
+      const NOTIFY_LEAD_MS = 7 * 24 * 60 * 60 * 1000;
+      const scheduledFor = new Date(expiresAt.getTime() - NOTIFY_LEAD_MS);
+      await client.query(
+        `INSERT INTO notifications (user_id, type, scheduled_for)
+         VALUES ($1, 'PREMIUM_EXPIRES_SOON', $2)
+         ON CONFLICT (user_id, type, scheduled_for) DO NOTHING`,
+        [userId, scheduledFor],
+      );
+    }
+
     // Mark event processed
     await client.query(
       "INSERT INTO processed_store_events (event_id) VALUES ($1)",
