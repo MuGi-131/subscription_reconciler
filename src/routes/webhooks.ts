@@ -22,6 +22,12 @@ const VALID_STORE_EVENT_TYPES: Set<string> = new Set<string>([
   ...REVOKING_EVENTS,
 ]);
 
+// Known products and their entitlement duration. Unknown products → no expiry.
+const PRODUCT_DURATION_MS: Record<string, number> = {
+  premium_monthly: 30 * 24 * 60 * 60 * 1000,
+  premium_yearly: 365 * 24 * 60 * 60 * 1000,
+};
+
 function parseStoreWebhook(body: unknown): StoreWebhookPayload | null {
   if (!body || typeof body !== "object") return null;
   const b = body as Record<string, unknown>;
@@ -56,7 +62,7 @@ router.post("/store", async (req: Request, res: Response) => {
     res.status(400).json({ error: "Invalid payload" });
     return;
   }
-  const { eventId, userId, type, eventTimeMs } = payload;
+  const { eventId, userId, type, eventTimeMs, productId } = payload;
 
   const client = await pool.connect();
   try {
@@ -109,17 +115,29 @@ router.post("/store", async (req: Request, res: Response) => {
     const newSource: EntitlementSource = newActive ? "STORE" : "NONE";
     const eventTimestamp = new Date(eventTimeMs);
 
+    // Compute expires_at for activating events with a known product
+    let expiresAt: Date | null = null;
+    if (isActivating) {
+      const duration = PRODUCT_DURATION_MS[productId];
+      if (duration !== undefined) {
+        expiresAt = new Date(eventTimeMs + duration);
+      } else {
+        console.warn(`Unknown productId ${productId} — entitlement saved without expiry`);
+      }
+    }
+
     // Upsert entitlement
     await client.query(
-      `INSERT INTO entitlements (user_id, active, source, last_changed_at, reason, last_event_time)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO entitlements (user_id, active, source, last_changed_at, reason, last_event_time, expires_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        ON CONFLICT (user_id) DO UPDATE
          SET active = EXCLUDED.active,
              source = EXCLUDED.source,
              last_changed_at = EXCLUDED.last_changed_at,
              reason = EXCLUDED.reason,
-             last_event_time = EXCLUDED.last_event_time`,
-      [userId, newActive, newSource, eventTimestamp, type, eventTimeMs],
+             last_event_time = EXCLUDED.last_event_time,
+             expires_at = EXCLUDED.expires_at`,
+      [userId, newActive, newSource, eventTimestamp, type, eventTimeMs, expiresAt],
     );
 
     // Mark event processed
