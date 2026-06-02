@@ -33,3 +33,5 @@ export interface StoreWebhookPayload {
   eventTimeMs: number;
   productId: string;
 }
+
+export type CarrierStatus = "active" | "inactive" | "api_error";
