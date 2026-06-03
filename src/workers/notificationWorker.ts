@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import { pool } from "../db/pool";
 
-async function dispatchPending(): Promise<void> {
+export async function dispatchPending(): Promise<void> {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
