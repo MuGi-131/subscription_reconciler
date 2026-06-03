@@ -2,12 +2,11 @@ import type { Config } from "jest";
 
 const config: Config = {
   testEnvironment: "node",
-  testMatch: ["<rootDir>/tests/**/*.test.ts"],
-  testPathIgnorePatterns: ["/node_modules/", "/tests/integration/"],
+  testMatch: ["<rootDir>/tests/integration/**/*.test.ts"],
   transform: {
     "^.+\\.ts$": ["ts-jest", { tsconfig: "tsconfig.test.json" }],
   },
-  clearMocks: true,
+  testTimeout: 15000,
 };
 
 export default config;
