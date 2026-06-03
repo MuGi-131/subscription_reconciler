@@ -41,7 +41,7 @@ async function claimNextUser(): Promise<string | null> {
   }
 }
 
-async function pollUser(userId: string): Promise<void> {
+export async function pollUser(userId: string): Promise<void> {
   let status: CarrierStatus;
   try {
     const url = `${CARRIER_BASE_URL}/plan?userId=${encodeURIComponent(userId)}`;
